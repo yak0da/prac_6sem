@@ -2,14 +2,15 @@ import sys
 from pathlib import Path
 import zlib
 
-
+# 1
 def get_branch_names(path: str):
     branch_names = []
     heads_dir = Path(path) / ".git" / "refs" / "heads"
-    for object in heads_dir.iterdir():
-        branch_names.append(object.name)
+    for obj in heads_dir.iterdir():
+        branch_names.append(obj.name)
     return "\n".join(branch_names)
 
+# 2
 # если параметр commit_hash не указан, то фукнция возвращает содержимое последнего коммита ветки branch_name
 # иначе возвращает содержимое указанного коммита commit_hash
 def get_commit(path: str, branch_name="", commit_hash=""):
@@ -25,6 +26,7 @@ def get_commit(path: str, branch_name="", commit_hash=""):
     _, _, body = commit_object.partition(b'\x00')
     return body.decode()
 
+# 3
 def show_tree_object(path: str, branch_name="", commit_hash=""):
     commit = get_commit(path, branch_name, commit_hash).split('\n')
     for line in commit:
@@ -43,9 +45,10 @@ def show_tree_object(path: str, branch_name="", commit_hash=""):
         state, name = state_and_name.decode().split()
         state = "tree" if state.startswith('4') else "blob"
         hash = new_body[:20].hex()
-        print(f"{state} {hash} {name}")
+        print(f"{state} {hash}\t{name}")
         remaining = new_body[20:]
 
+# 4
 def show_history(path: str, branch_name: str):
     with open(f"{path}/.git/refs/heads/{branch_name}", "r") as f:
         last_commit_hash = f.read().strip()
@@ -54,27 +57,27 @@ def show_history(path: str, branch_name: str):
     show_tree_object(path, commit_hash=last_commit_hash)
 
     last_commit = get_commit(path, commit_hash=last_commit_hash).split('\n')
+    parent_commit_hash = ""
     for line in last_commit:
         if line.startswith("parent"):
             parent_commit_hash = line.split()[1]
             break
-    
-    while parent_commit_hash:
-        print()
-        print(f"TREE for commit {parent_commit_hash}")
-        show_tree_object(path, commit_hash=parent_commit_hash)
 
-        cur_commit = get_commit(path, commit_hash=parent_commit_hash).split('\n')
-        for line in cur_commit:
-            if line.startswith("parent"):
-                parent_commit_hash = line.split()[1]
+    if parent_commit_hash:
+        while parent_commit_hash:
+            file_path = Path(f"{path}/.git/objects/{parent_commit_hash[:2]}/{parent_commit_hash[2:]}")
+            if not file_path.exists():
                 break
-        
-        
-    
 
-    
+            print(f"TREE for commit {parent_commit_hash}")
+            show_tree_object(path, commit_hash=parent_commit_hash)
 
+            cur_commit = get_commit(path, commit_hash=parent_commit_hash).split('\n')
+            parent_commit_hash = ""
+            for line in cur_commit:
+                if line.startswith("parent"):
+                    parent_commit_hash = line.split()[1]
+                    break
 
 def main():
     path = sys.argv[1]
@@ -82,8 +85,9 @@ def main():
         print(get_branch_names(path))
     else:
         branch_name = sys.argv[2]
-        show_history(path, branch_name)
-
+        print(get_commit(path, branch_name))
+        show_tree_object(path, branch_name)
+        show_history(path, branch_name)     
 
 if __name__ == "__main__":
     main()
