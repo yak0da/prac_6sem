@@ -4,8 +4,9 @@ from cowsay import cowsay, list_cows # в
 field = [["" for _ in range(10)] for _ in range(10)]
 curX, curY = 0, 0
 
-def encounter(x: int, y: int, text: str):
-    print(cowsay(text))
+def encounter(x: int, y: int, obj): # б
+    name, hello = obj               # б
+    print(cowsay(hello, cow=name))  # б
 
 for line in sys.stdin:
     line = line.strip()
