@@ -26,14 +26,14 @@ for line in sys.stdin:
 
     command = line.split()
     if command[0] == "addmon":
-        if len(command) == 4 and command[1].isdigit() and command[2].isdigit():
-            x, y = int(command[1]), int(command[2])
+        if len(command) == 5 and command[2].isdigit() and command[3].isdigit(): # а
+            name = command[1]         # а
+            hello = command[4]        # а
+            x, y = int(command[2]), int(command[3]) # а
+            print(f"Added monster {name} to ({x}, {y}) saying {hello}")     # а
             if field[y][x]:
-                print(f"Added monster to ({x}, {y}) saying {command[3]}")
                 print("Replaced the old monster")
-            else:
-                print(f"Added monster to ({x}, {y}) saying {command[3]}")
-            field[y][x] = command[3]
+            field[y][x] = (name, hello)         # а
         else:
             print("Invalid arguments")
     else:
