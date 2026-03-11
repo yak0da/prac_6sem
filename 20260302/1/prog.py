@@ -26,6 +26,9 @@ def encounter(x: int, y: int, obj): # б
     else:
         print(cowsay(hello, cow=name))
 
+# старт
+print("<<< Welcome to Python-MUD 0.1 >>>")
+
 for line in sys.stdin:
     line = line.strip()
     if line in ["up", "down", "left", "right"]:
