@@ -88,7 +88,11 @@ def main():
             if field[y][x]:
                 print("Replaced the old monster")
             field[y][x] = Monster(monster_name, hello_string, hitpoints, (x, y))
+<<<<<<< HEAD
             print(f"Added monster {monster_name} to ({x}, {y}) saying {hello_string}")
+=======
+            
+>>>>>>> a454d0a (20260302/1: added class Monster consisted of name, hello-string, etc.)
 
 
 if __name__ == "__main__":
