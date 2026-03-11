@@ -1,12 +1,30 @@
 import sys
-from cowsay import cowsay, list_cows # в
+from io import StringIO
+from cowsay import cowsay, list_cows, read_dot_cow
+
+jgsbat = read_dot_cow(StringIO(r"""
+$the_cow = <<EOC;
+    ,_                    _,
+    ) '-._  ,_    _,  _.-' (
+    )  _.-'.|\\--//|.'-._  (
+     )'   .'\/o\/o\/'.   `(
+      ) .' . \====/ . '. (
+       )  / <<    >> \  (
+        '-._/``  ``\_.-'
+  jgs     __\\'--'//__
+         (((""`  `"")))
+EOC
+"""))
 
 field = [["" for _ in range(10)] for _ in range(10)]
 curX, curY = 0, 0
 
 def encounter(x: int, y: int, obj): # б
     name, hello = obj               # б
-    print(cowsay(hello, cow=name))  # б
+    if name == "jgsbat":
+        print(cowsay(hello, cowfile=jgsbat))
+    else:
+        print(cowsay(hello, cow=name))
 
 for line in sys.stdin:
     line = line.strip()
