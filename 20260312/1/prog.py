@@ -27,6 +27,15 @@ class Monster:
             return cowsay(self.hello, cowfile=jgsbat)
         return cowsay(self.hello, cow=self.name)
 
+class Player:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+    def move(self, dx, dy):
+        self.x = (self.x + dx) % 10
+        self.y = (self.y + dy) % 10
+        return self.x, self.y
+
 def main():
     field = [[None for _ in range(10)] for _ in range(10)]
     curX, curY = 0, 0
