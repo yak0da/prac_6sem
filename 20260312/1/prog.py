@@ -35,6 +35,27 @@ class Player:
         self.x = (self.x + dx) % 10
         self.y = (self.y + dy) % 10
         return self.x, self.y
+    
+class Game:
+    def __init__(self):
+        self.field = [[None] * 10 for _ in range(10)]
+        self.player = Player()
+
+    def move(self, dx, dy):
+        x, y = self.player.move(dx, dy)
+        output = [f"Moved to ({x}, {y})"]
+        if self.field[x][y]:
+            output.append(self.field[x][y].encounter())
+        return "\n".join(output)
+    
+    def add_monster(self, hello, hp, name, x, y):
+        if not name in [*list_cows(), "jgsbat"]:
+            return "Cannot add unknown monster"
+        output = [f"Added monster {name} to ({x}, {y}) saying {hello}"]
+        if self.field[x][y]:
+            output.append("Replaced the old monster")
+        self.field[x][y] = Monster(name, hello, hp)
+        return "\n".join(output)
 
 def main():
     field = [[None for _ in range(10)] for _ in range(10)]
