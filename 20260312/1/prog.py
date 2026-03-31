@@ -57,6 +57,29 @@ class Game:
             output.append("Replaced the old monster")
         self.field[x][y] = Monster(name, hello, hp)
         return "\n".join(output)
+    def attack(self):
+        x = self.player.x
+        y = self.player.y
+        monster = self.field[x][y]
+        if not monster:
+            print("No monster here")
+            return
+        if monster.hitpoints >= 10:
+            damage = 10
+            monster.hitpoints -= 10
+        else:
+            damage = monster.hitpoints
+            monster.hitpoints = 0
+
+        output = [f"Attacked {monster.name}, damage {damage} hp"]
+
+        if monster.hitpoints == 0:
+            self.field[x][y] = None
+            output.append(f"{monster.name} died")
+        else:
+            output.append(f"{monster.name} now has {monster.hitpoints}")
+        return "\n".join(output)
+        
     
 class MUD_SH(cmd.Cmd):
     intro = "<<< Welcome to Python-MUD 0.1 >>>"
@@ -92,6 +115,9 @@ class MUD_SH(cmd.Cmd):
     def do_EOF(self, arg):
         print()
         return True
+    
+    def do_attack(self, arg):
+        print(self.game.attack())
 
 
 if __name__ == "__main__":
