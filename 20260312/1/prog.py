@@ -18,18 +18,14 @@ EOC
 """))
 
 class Monster:
-    def __init__(self, name, hello, hitpoints, coords):
+    def __init__(self, name, hello_string, hitpoints):
         self.name = name
-        self.hello = hello
+        self.hello = hello_string
         self.hitpoints = hitpoints
-        self.x, self.y = coords
-
-def encounter(obj):
-    name, hello = obj.name, obj.hello
-    if name == "jgsbat":
-        print(cowsay(hello, cowfile=jgsbat))
-    else:
-        print(cowsay(hello, cow=name))
+    def encounter(self):
+        if self.name == "jgsbat":
+            return cowsay(self.hello, cowfile=jgsbat)
+        return cowsay(self.hello, cow=self.name)
 
 def main():
     field = [[None for _ in range(10)] for _ in range(10)]
