@@ -3,6 +3,7 @@ import shlex
 from io import StringIO
 from cowsay import cowsay, list_cows, read_dot_cow
 import cmd
+import readline
 
 jgsbat = read_dot_cow(StringIO(r"""
 $the_cow = <<EOC;
@@ -32,6 +33,7 @@ class Player:
     def __init__(self):
         self.x = 0
         self.y = 0
+        self.weapons = {"sword": 10, "spear": 15, "axe": 20}
     def move(self, dx, dy):
         self.x = (self.x + dx) % 10
         self.y = (self.y + dy) % 10
@@ -57,16 +59,20 @@ class Game:
             output.append("Replaced the old monster")
         self.field[x][y] = Monster(name, hello, hp)
         return "\n".join(output)
-    def attack(self):
+    
+    def attack(self, weapon_name="sword"):
+        if not weapon_name in self.player.weapons.keys():
+            return "Unknown weapon"
+        damage = self.player.weapons[weapon_name]
+
         x = self.player.x
         y = self.player.y
         monster = self.field[x][y]
         if not monster:
-            print("No monster here")
-            return
-        if monster.hitpoints >= 10:
-            damage = 10
-            monster.hitpoints -= 10
+            return "No monster here"
+        
+        if monster.hitpoints >= damage:
+            monster.hitpoints -= damage
         else:
             damage = monster.hitpoints
             monster.hitpoints = 0
@@ -117,8 +123,22 @@ class MUD_SH(cmd.Cmd):
         return True
     
     def do_attack(self, arg):
-        print(self.game.attack())
+        """attack with <weapon_name>"""
+        parts = shlex.split(arg)
+        if len(parts) == 2 and parts[0] == "with":
+            print(self.game.attack(parts[1]))
+        else:
+            print(self.game.attack())
+    
+    def complete_attack(self, text, line, begidx, endidx):
+        output = []
+        args = shlex.split(line)
 
+        if len(args) == 1 and (args[0] == "with"):
+            for i in self.game.player.weapons.key():
+                if i.startswith(text):
+                    output.append(i)
+        return output
 
 if __name__ == "__main__":
     MUD_SH().cmdloop()
