@@ -59,18 +59,15 @@ class Game:
             output.append("Replaced the old monster")
         self.field[x][y] = Monster(name, hello, hp)
         return "\n".join(output)
-    
-    def attack(self, weapon_name="sword"):
+    def attack(self, monster_name, weapon_name="sword"):
         if not weapon_name in self.player.weapons.keys():
             return "Unknown weapon"
         damage = self.player.weapons[weapon_name]
-
         x = self.player.x
         y = self.player.y
         monster = self.field[x][y]
-        if not monster:
-            return "No monster here"
-        
+        if (not monster) or monster.name != monster_name:
+            return f"No {monster_name} here"
         if monster.hitpoints >= damage:
             monster.hitpoints -= damage
         else:
@@ -123,22 +120,28 @@ class MUD_SH(cmd.Cmd):
         return True
     
     def do_attack(self, arg):
-        """attack with <weapon_name>"""
+        """attack <monster_name> with <weapon_name>"""
         parts = shlex.split(arg)
-        if len(parts) == 2 and parts[0] == "with":
-            print(self.game.attack(parts[1]))
-        else:
-            print(self.game.attack())
-    
-    def complete_attack(self, text, line, begidx, endidx):
-        output = []
-        args = shlex.split(line)
+        try:
+            if len(parts) == 3 and parts[1] == "with":
+                print(self.game.attack(parts[0], parts[2]))
+            else:
+                print(self.game.attack(parts[0]))
+        except Exception:
+            print("Invalid arguments")
 
-        if len(args) == 1 and (args[0] == "with"):
-            for i in self.game.player.weapons.key():
-                if i.startswith(text):
-                    output.append(i)
-        return output
+    def complete_attack(self, text, line, begidx, endidx):
+        parts = shlex.split(line)
+        if "with" in parts:
+            with_idx = parts.index("with")
+            if len(parts) == with_idx + 2:
+                weapons = ["sword", "spear", "axe"]
+                return [w for w in weapons if w.startswith(text)]
+        else:
+            if len(parts) == 2:
+                monsters = [*list_cows(), "jgsbat"]
+                return [m for m in monsters if m.startswith(text)]
+        return []
 
 if __name__ == "__main__":
     MUD_SH().cmdloop()
