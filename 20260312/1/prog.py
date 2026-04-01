@@ -57,13 +57,12 @@ class Game:
             output.append("Replaced the old monster")
         self.field[x][y] = Monster(name, hello, hp)
         return "\n".join(output)
-    def attack(self):
+    def attack(self, monster_name):
         x = self.player.x
         y = self.player.y
         monster = self.field[x][y]
-        if not monster:
-            print("No monster here")
-            return
+        if (not monster) or monster.name != monster_name:
+            return f"No {monster_name} here"
         if monster.hitpoints >= 10:
             damage = 10
             monster.hitpoints -= 10
@@ -117,7 +116,19 @@ class MUD_SH(cmd.Cmd):
         return True
     
     def do_attack(self, arg):
-        print(self.game.attack())
+        parts = shlex.split(arg)
+        try:
+            monster_name = parts[0]
+            print(self.game.attack(monster_name))
+        except Exception:
+            print("Invalid arguments")
+
+    def complete_attack(self, text, line, begidx, endidx):
+        output = []
+        for i in (cowsay.list_cows() + ["jgsbat"]):
+            if i.startswith(text):
+                output.append(i)
+        return output
 
 
 if __name__ == "__main__":
