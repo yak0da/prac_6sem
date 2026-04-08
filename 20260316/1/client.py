@@ -1,10 +1,8 @@
 import socket
-import sys
 import shlex
 from io import StringIO
 from cowsay import cowsay, list_cows, read_dot_cow
 import cmd
-import readline
 
 jgsbat = read_dot_cow(StringIO(r"""
 $the_cow = <<EOC;
@@ -41,7 +39,6 @@ class MUD_SH(cmd.Cmd):
 
     def __init__(self, Socket):
         super().__init__()
-        # self.game = Game()
         self.socket = Socket
 
     def do_up(self, arg):
@@ -68,7 +65,6 @@ class MUD_SH(cmd.Cmd):
             hitpoints = int(parts[1 + parts.index("hp")])
             i = parts.index("coords")
             x, y = int(parts[i + 1]), int(parts[i + 2])
-            # data = f"addmon {hello_string} {hitpoints} {monster_name} {x} {y}"
             data = f"addmon {shlex.quote(hello_string)} {hitpoints} {shlex.quote(monster_name)} {x} {y}\n"
             self.socket.sendall(data.encode("utf-8"))
             print(self.socket.recv(1024).decode("utf-8", errors="replace"))
