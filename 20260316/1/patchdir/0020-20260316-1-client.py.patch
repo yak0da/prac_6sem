@@ -1,0 +1,47 @@
+From e7531c103cc413c23ff5fc69968be4f29a81f5cb Mon Sep 17 00:00:00 2001
+From: Airat <101736633+sqdyakoda@users.noreply.github.com>
+Date: Wed, 8 Apr 2026 13:08:58 +0300
+Subject: [PATCH 20/20] =?UTF-8?q?20260316/1:=20=D0=BE=D0=B1=D0=BD=D0=BE?=
+ =?UTF-8?q?=D0=B2=D0=BB=D0=B5=D0=BD=D0=B8=D0=B5=20client.py?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ 20260316/1/client.py | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/20260316/1/client.py b/20260316/1/client.py
+index cce3b79..1fc9cda 100644
+--- a/20260316/1/client.py
++++ b/20260316/1/client.py
+@@ -1,10 +1,8 @@
+ import socket
+-import sys
+ import shlex
+ from io import StringIO
+ from cowsay import cowsay, list_cows, read_dot_cow
+ import cmd
+-import readline
+ 
+ jgsbat = read_dot_cow(StringIO(r"""
+ $the_cow = <<EOC;
+@@ -41,7 +39,6 @@ class MUD_SH(cmd.Cmd):
+ 
+     def __init__(self, Socket):
+         super().__init__()
+-        # self.game = Game()
+         self.socket = Socket
+ 
+     def do_up(self, arg):
+@@ -68,7 +65,6 @@ class MUD_SH(cmd.Cmd):
+             hitpoints = int(parts[1 + parts.index("hp")])
+             i = parts.index("coords")
+             x, y = int(parts[i + 1]), int(parts[i + 2])
+-            # data = f"addmon {hello_string} {hitpoints} {monster_name} {x} {y}"
+             data = f"addmon {shlex.quote(hello_string)} {hitpoints} {shlex.quote(monster_name)} {x} {y}\n"
+             self.socket.sendall(data.encode("utf-8"))
+             print(self.socket.recv(1024).decode("utf-8", errors="replace"))
+-- 
+2.39.5 (Apple Git-154)
+
