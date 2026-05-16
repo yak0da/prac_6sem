@@ -69,6 +69,17 @@ class MUD_SH(cmd.Cmd):
         print()
         return True
 
+    def do_sayall(self, arg):
+        """sayall <строка>"""
+        try:
+            parts = shlex.split(arg)
+            if len(parts) != 1:
+                print("Invalid arguments")
+                return
+            self.send_command(f"sayall {shlex.quote(parts[0])}")
+        except Exception:
+            print("Invalid arguments")
+
     def do_attack(self, arg):
         """attack <monster_name> with <weapon_name>"""
         parts = shlex.split(arg)

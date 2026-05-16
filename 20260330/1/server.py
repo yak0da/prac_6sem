@@ -152,6 +152,10 @@ def process_command(username, data):
             if len(parts) != 3:
                 return ["Invalid arguments"], []
             return game.attack(username, parts[1], parts[2])
+        case "sayall":
+            if len(parts) != 2:
+                return ["Invalid arguments"], []
+            return [], [f"{username}: {parts[1]}"]
         case _:
             return ["Invalid command"], []
 
