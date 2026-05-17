@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+doc/_build/
+.i18n
+.test
+mood/server/locale/mud_msg.pot
+.doit.db.*
