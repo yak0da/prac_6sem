@@ -1,22 +1,8 @@
 """Monster names and custom cow art."""
 
-from io import StringIO
+from importlib import resources
 
 from cowsay import list_cows, read_dot_cow
-
-JGSBAT_COW = r"""
-$the_cow = <<EOC;
-    ,_                    _,
-    ) '-._  ,_    _,  _.-' (
-    )  _.-'.|\\--//|.'-._  (
-     )'   .'\/o\/o\/'.   `(
-      ) .' . \====/ . '. (
-       )  / <<    >> \  (
-        '-._/``  ``\_.-'
-  jgs     __\\'--'//__
-         (((""`  `"")))
-EOC
-"""
 
 _jgsbat = None
 
@@ -25,7 +11,9 @@ def get_jgsbat():
     """Return cowsay art for the jgsbat monster."""
     global _jgsbat
     if _jgsbat is None:
-        _jgsbat = read_dot_cow(StringIO(JGSBAT_COW))
+        cow_path = resources.files("mood.common") / "jgsbat.cow"
+        with cow_path.open(encoding="utf-8") as cow_file:
+            _jgsbat = read_dot_cow(cow_file)
     return _jgsbat
 
 

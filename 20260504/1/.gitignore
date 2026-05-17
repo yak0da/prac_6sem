@@ -1,7 +1,13 @@
 __pycache__/
 *.py[cod]
 doc/_build/
+mood/docs/html/
 .i18n
 .test
 mood/server/locale/mud_msg.pot
 .doit.db.*
+*.egg-info/
+dist/
+build/
+.venv/
+.venv-*/

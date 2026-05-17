@@ -5,6 +5,8 @@ import socket
 import sys
 import threading
 import time
+import webbrowser
+from importlib import resources
 
 import cmd
 import readline
@@ -154,6 +156,14 @@ class MUD_SH(cmd.Cmd):
             print("Invalid arguments")
             return
         self.send_command(f"locale {arg.strip()}")
+
+    def do_documentation(self, _arg):
+        """Open installed HTML documentation in a browser."""
+        doc_index = resources.files("mood") / "docs" / "html" / "index.html"
+        if not doc_index.is_file():
+            print("Documentation is not installed")
+            return
+        webbrowser.open(doc_index.as_uri())
 
     def complete_attack(self, text, line, begidx, endidx):
         """Complete monster or weapon names for attack."""

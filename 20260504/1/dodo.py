@@ -79,6 +79,24 @@ def task_html():
     }
 
 
+def _copy_docs_for_package():
+    src = Path("doc/_build/html")
+    dst = Path("mood/docs/html")
+    if dst.exists():
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+
+
+def task_docs_pkg():
+    """Copy built HTML docs into the package tree."""
+    return {
+        "actions": [_copy_docs_for_package],
+        "targets": ["mood/docs/html/index.html"],
+        "task_dep": ["html"],
+        "clean": [(shutil.rmtree, ["mood/docs/html"], {"ignore_errors": True})],
+    }
+
+
 def task_test():
     """Run client+server tests."""
     return {
