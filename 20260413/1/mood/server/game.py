@@ -56,6 +56,7 @@ class Game:
         """Initialize empty field and players."""
         self.field = [[None] * FIELD_SIZE for _ in range(FIELD_SIZE)]
         self.players = {}
+        self.moving_monsters = True
 
     def add_player(self, username):
         """Register a connected player."""
@@ -64,6 +65,12 @@ class Game:
     def remove_player(self, username):
         """Remove a disconnected player."""
         self.players.pop(username, None)
+
+    def set_moving_monsters(self, enabled):
+        """Enable or disable wandering monsters."""
+        self.moving_monsters = enabled
+        state = "on" if enabled else "off"
+        return [f"Moving monsters: {state}"], []
 
     def list_monster_cells(self):
         """Return ``(x, y, monster)`` for every occupied cell."""

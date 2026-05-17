@@ -84,6 +84,10 @@ def process_command(username, data):
             if len(parts) != 2:
                 return ["Invalid arguments"], []
             return [], [f"{username}: {parts[1]}"]
+        case "movemonsters":
+            if len(parts) != 2 or parts[1] not in ("on", "off"):
+                return ["Invalid arguments"], []
+            return game.set_moving_monsters(parts[1] == "on")
         case _:
             return ["Invalid command"], []
 
@@ -92,6 +96,8 @@ async def wander_loop():
     """Move a random monster every :data:`WANDER_INTERVAL_SEC` seconds."""
     while True:
         await asyncio.sleep(WANDER_INTERVAL_SEC)
+        if not game.moving_monsters:
+            continue
         result = game.wander_monster()
         if result is None:
             continue

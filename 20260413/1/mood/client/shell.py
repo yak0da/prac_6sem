@@ -141,6 +141,13 @@ class MUD_SH(cmd.Cmd):
         except ValueError:
             print("Invalid arguments")
 
+    def do_movemonsters(self, arg):
+        """Turn wandering monsters on or off."""
+        if arg not in ("on", "off"):
+            print("Invalid arguments")
+            return
+        self.send_command(f"movemonsters {arg}")
+
     def complete_attack(self, text, line, begidx, endidx):
         """Complete monster or weapon names for attack."""
         del begidx, endidx
