@@ -1,5 +1,5 @@
 """Entry point for ``python -m mood.server``."""
-
+# если сервер не запускается, то выполнить команду: lsof -ti :1111 | xargs kill 
 import asyncio
 
 from mood.server.app import run_server

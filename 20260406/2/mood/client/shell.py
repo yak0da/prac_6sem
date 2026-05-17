@@ -4,6 +4,7 @@ import shlex
 import socket
 import sys
 import threading
+import time
 
 import cmd
 import readline
@@ -11,6 +12,8 @@ from cowsay import list_cows
 
 from mood.common.constants import WEAPONS
 from mood.common.monsters import KNOWN_MONSTERS
+
+CMD_INTERVAL_SEC = 1
 
 
 class MUD_SH(cmd.Cmd):
@@ -26,6 +29,7 @@ class MUD_SH(cmd.Cmd):
         self.lock = threading.Lock()
         self.last_cmd = ""
         self.closing = False
+        self.script_mode = False
 
     def emptyline(self):
         """Do nothing on an empty line."""
@@ -38,6 +42,10 @@ class MUD_SH(cmd.Cmd):
     def display(self, message):
         """Print a server message without losing input."""
         if self.closing:
+            return
+        if self.script_mode:
+            end = "" if message.endswith("\n") else "\n"
+            print(message, end=end)
             return
         with self.lock:
             line = readline.get_line_buffer()
@@ -55,6 +63,8 @@ class MUD_SH(cmd.Cmd):
         if not data.endswith("\n"):
             data += "\n"
         self.sock.sendall(data.encode("utf-8"))
+        if self.script_mode:
+            time.sleep(CMD_INTERVAL_SEC)
 
     def do_up(self, _arg):
         """Send move up."""
@@ -143,6 +153,16 @@ class MUD_SH(cmd.Cmd):
             monsters = [*list_cows(), "jgsbat"]
             return [m for m in monsters if m.startswith(text)]
         return []
+
+
+def run_cmdfile(mud, filename):
+    """Run shell commands from a file instead of interactive input."""
+    mud.script_mode = True
+    mud.use_rawinput = False
+    mud.prompt = ""
+    with open(filename, encoding="utf-8") as cmdfile:
+        mud.stdin = cmdfile
+        mud.cmdloop()
 
 
 def reader_thread(sock, mud, initial=b""):
