@@ -105,11 +105,17 @@ class Game:
         if name not in KNOWN_MONSTERS:
             return ["Cannot add unknown monster"], []
         self.field[x][y] = Monster(name, hello, hp)
-        msg = (
-            f"{username} placed monster {name} with {hp} hp "
-            f"at ({x}, {y})"
+        event = (
+            "placed",
+            {
+                "username": username,
+                "name": name,
+                "hp": hp,
+                "x": x,
+                "y": y,
+            },
         )
-        return [], [msg]
+        return [], [event]
 
     def attack(self, username, monster_name, weapon_name):
         """Attack a monster and build broadcast message."""
@@ -128,15 +134,21 @@ class Game:
             damage = monster.hitpoints
             monster.hitpoints = 0
 
-        msg = (
-            f"{username} attacked {monster.name} with {weapon_name}, "
-            f"damage {damage} hp, {monster.name} has "
-            f"{monster.hitpoints} hp left"
-        )
-        if monster.hitpoints == 0:
+        killed = monster.hitpoints == 0
+        if killed:
             self.field[x][y] = None
-            msg += f", {monster.name} was killed"
-        return [], [msg]
+        event = (
+            "attack",
+            {
+                "username": username,
+                "monster": monster.name,
+                "weapon": weapon_name,
+                "damage": damage,
+                "left": monster.hitpoints,
+                "killed": killed,
+            },
+        )
+        return [], [event]
 
     def wander_monster(self):
         """Move one random monster one cell in a random direction."""

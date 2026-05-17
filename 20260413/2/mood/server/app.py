@@ -5,9 +5,11 @@ import shlex
 
 from mood.common.constants import HOST, PORT
 from mood.server.game import Game, WANDER_INTERVAL_SEC
+from mood.server.localize import render_event
 
 game = Game()
 clients = {}
+client_locales = {}
 
 
 def valid_username(username):
@@ -28,17 +30,31 @@ def schedule_send(writer, message):
     asyncio.create_task(send_line(writer, message))
 
 
-def schedule_broadcast(message):
-    """Schedule asynchronous send to all clients."""
-    for writer in clients.values():
-        schedule_send(writer, message)
+def localize(message, locale):
+    """Translate an event tuple or pass through plain text."""
+    if isinstance(message, tuple):
+        return render_event(locale, message)
+    return message
 
 
-def schedule_unicast(username, message):
-    """Schedule asynchronous send to one client by name."""
+def schedule_broadcast(messages):
+    """Schedule localized send to all clients."""
+    if isinstance(messages, str):
+        messages = [messages]
+    for username, writer in clients.items():
+        locale = client_locales.get(username)
+        for message in messages:
+            schedule_send(writer, localize(message, locale))
+
+
+def schedule_unicast(username, messages):
+    """Schedule localized send to one client by name."""
     writer = clients.get(username)
-    if writer:
-        schedule_send(writer, message)
+    if not writer:
+        return
+    locale = client_locales.get(username)
+    for message in messages:
+        schedule_send(writer, localize(message, locale))
 
 
 def dispatch_messages(broadcast, unicast):
@@ -46,8 +62,7 @@ def dispatch_messages(broadcast, unicast):
     if broadcast:
         schedule_broadcast(broadcast)
     for username, messages in unicast.items():
-        for message in messages:
-            schedule_unicast(username, message)
+        schedule_unicast(username, messages)
 
 
 def process_command(username, data):
@@ -88,6 +103,11 @@ def process_command(username, data):
             if len(parts) != 2 or parts[1] not in ("on", "off"):
                 return ["Invalid arguments"], []
             return game.set_moving_monsters(parts[1] == "on")
+        case "locale":
+            if len(parts) != 2:
+                return ["Invalid arguments"], []
+            client_locales[username] = parts[1]
+            return [("locale_set", {"name": parts[1]})], []
         case _:
             return ["Invalid command"], []
 
@@ -124,10 +144,11 @@ async def handle_client(reader, writer):
         return
 
     clients[username] = writer
+    client_locales[username] = None
     game.add_player(username)
 
     await send_line(writer, f"Connected as {username}")
-    schedule_broadcast(f"{username} joined MUD")
+    schedule_broadcast([("joined", {"username": username})])
 
     try:
         while True:
@@ -138,14 +159,13 @@ async def handle_client(reader, writer):
             if not line:
                 continue
             unicast, broadcast = process_command(username, line)
-            for message in unicast:
-                schedule_unicast(username, message)
-            for message in broadcast:
-                schedule_broadcast(message)
+            schedule_unicast(username, unicast)
+            schedule_broadcast(broadcast)
     finally:
         clients.pop(username, None)
+        client_locales.pop(username, None)
         game.remove_player(username)
-        schedule_broadcast(f"{username} left MUD")
+        schedule_broadcast([("left", {"username": username})])
         writer.close()
         await writer.wait_closed()
 

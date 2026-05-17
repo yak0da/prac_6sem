@@ -1,0 +1,34 @@
+# Russian translations for MOOD server.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "Set up locale: %(name)s"
+msgstr "Установлена локаль: %(name)s"
+
+msgid "%(username)s joined MUD"
+msgstr "%(username)s зашёл в MUD"
+
+msgid "%(username)s left MUD"
+msgstr "%(username)s покинул MUD"
+
+msgid "%(username)s placed monster %(name)s with %(hp)s at (%(x)s, %(y)s)"
+msgstr "%(username)s установил монстра %(name)s с %(hp)s в (%(x)s, %(y)s)"
+
+msgid ""
+"%(username)s attacked %(monster)s with %(weapon)s, damage %(damage)s, "
+"%(monster)s has %(left)s"
+msgstr ""
+"%(username)s атаковал %(monster)s с помощью %(weapon)s, урон %(damage)s, "
+"у %(monster)s осталось %(left)s"
+
+msgid ", %(monster)s was killed"
+msgstr ", %(monster)s убит"
+
+msgid "%(n)d hp"
+msgid_plural "%(n)d hp"
+msgstr[0] "%(n)d очко"
+msgstr[1] "%(n)d очка"
+msgstr[2] "%(n)d очков"
