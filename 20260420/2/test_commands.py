@@ -1,93 +1,90 @@
-import multiprocessing
-import socket
-import time
+import io
+import shlex
 import unittest
+from unittest.mock import MagicMock, patch
 
-from mood.common.constants import HOST, PORT
-from mood.server.app import start_server
-
-
-class MUDTestClient:
-    def __init__(self, username, host=HOST, port=PORT):
-        self.sock = socket.create_connection((host, port))
-        self.username = username
-        self._buffer = b""
-        self.sock.sendall(f"{username}\n".encode())
-        greeting = self.read_line()
-        assert greeting.startswith("Connected as ")
-
-    def send_command(self, command):
-        self.sock.sendall(f"{command}\n".encode())
-
-    def read_line(self, timeout=5.0):
-        self.sock.settimeout(timeout)
-        while b"\n" not in self._buffer:
-            chunk = self.sock.recv(4096)
-            if not chunk:
-                raise ConnectionError("connection closed")
-            self._buffer += chunk
-        line, self._buffer = self._buffer.split(b"\n", 1)
-        return line.decode("utf-8", errors="replace")
-
-    def read_line_containing(self, text, max_lines=30, timeout=5.0):
-        for _ in range(max_lines):
-            line = self.read_line(timeout=timeout)
-            if text in line:
-                return line
-        raise AssertionError(f"no line containing {text!r}")
-
-    def close(self):
-        self.sock.close()
+from mood.client.shell import MUD_SH
 
 
-class TestServerCommands(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.server_proc = multiprocessing.Process(
-            target=start_server,
-            kwargs={"host": HOST, "port": PORT},
-        )
-        cls.server_proc.start()
-        time.sleep(0.5)
+def sent_messages(sock):
+    lines = []
+    for call in sock.sendall.call_args_list:
+        lines.append(call[0][0].decode("utf-8"))
+    return lines
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.server_proc.terminate()
-        cls.server_proc.join(timeout=3)
+
+class TestMoveCommands(unittest.TestCase):
 
     def setUp(self):
-        name = f"test_{self.id().split('.')[-1]}"
-        self.client = MUDTestClient(name)
-        self.client.send_command("movemonsters off")
-        self.client.read_line_containing("Moving monsters: off")
+        self.sock = MagicMock()
+        self.mud = MUD_SH(self.sock)
 
-    def tearDown(self):
-        self.client.close()
+    def test_up_to_protocol(self):
+        self.mud.onecmd("up")
+        self.assertEqual(sent_messages(self.sock), ["move 0 -1\n"])
 
-    def test_add_monster(self):
-        self.client.send_command('addmon "Hi" 10 dragon 1 0')
-        line = self.client.read_line_containing("placed monster dragon")
-        self.assertIn("10 hp", line)
-        self.assertIn("(1, 0)", line)
+    def test_right_to_protocol(self):
+        self.mud.onecmd("right")
+        self.assertEqual(sent_messages(self.sock), ["move 1 0\n"])
 
-    def test_monster_encounter(self):
-        self.client.send_command('addmon "Hello" 10 dragon 1 0')
-        self.client.read_line_containing("placed monster dragon")
-        self.client.send_command("move 1 0")
-        self.client.read_line_containing("Moved to (1, 0)")
-        greeting = self.client.read_line_containing("Hello", max_lines=30)
-        self.assertIn("Hello", greeting)
 
-    def test_attack_monster(self):
-        self.client.send_command('addmon "Roar" 15 dragon 1 0')
-        self.client.read_line_containing("placed monster dragon")
-        self.client.send_command("move 1 0")
-        self.client.read_line_containing("Moved to (1, 0)")
-        self.client.read_line_containing("Roar", max_lines=30)
-        self.client.send_command("attack dragon sword")
-        line = self.client.read_line_containing("attacked dragon")
-        self.assertIn("sword", line)
-        self.assertIn("damage", line)
+class TestAddmonCommand(unittest.TestCase):
+
+    def setUp(self):
+        self.sock = MagicMock()
+        self.mud = MUD_SH(self.sock)
+
+    def test_addmon_coords_1_2(self):
+        hello = "Hi there"
+        self.mud.onecmd(
+            f'addmon dragon hello "{hello}" hp 10 coords 1 2'
+        )
+        expected = (
+            f"addmon {shlex.quote(hello)} 10 dragon 1 2\n"
+        )
+        self.assertEqual(sent_messages(self.sock), [expected])
+
+    def test_addmon_coords_3_4(self):
+        self.mud.onecmd("addmon bunny hello Hop hp 5 coords 3 4")
+        self.assertEqual(
+            sent_messages(self.sock),
+            ["addmon Hop 5 bunny 3 4\n"],
+        )
+
+    def test_unknown_monster_not_sent(self):
+        with patch("sys.stdout", new_callable=io.StringIO) as out:
+            self.mud.onecmd("addmon foo hello x hp 1 coords 0 0")
+        self.sock.sendall.assert_not_called()
+        self.assertIn("Cannot add unknown monster", out.getvalue())
+
+    def test_invalid_arguments_not_sent(self):
+        with patch("sys.stdout", new_callable=io.StringIO) as out:
+            self.mud.onecmd("addmon dragon hello only")
+        self.sock.sendall.assert_not_called()
+        self.assertIn("Invalid arguments", out.getvalue())
+
+
+class TestInputSequence(unittest.TestCase):
+
+    def test_sequence_via_cmdloop(self):
+        sock = MagicMock()
+        mud = MUD_SH(sock)
+        mud.use_rawinput = True
+        inputs = iter(["up", "right", "EOF"])
+
+        def mock_input(_prompt=""):
+            line = next(inputs)
+            if line == "EOF":
+                raise EOFError
+            return line
+
+        with patch("builtins.input", mock_input):
+            mud.cmdloop()
+
+        self.assertEqual(
+            sent_messages(sock),
+            ["move 0 -1\n", "move 1 0\n"],
+        )
 
 
 if __name__ == "__main__":
