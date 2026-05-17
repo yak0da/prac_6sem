@@ -1,9 +1,20 @@
 """Game world state and rules."""
 
+import random
+
 from cowsay import cowsay
 
 from mood.common.constants import FIELD_SIZE, WEAPONS
 from mood.common.monsters import KNOWN_MONSTERS, get_jgsbat
+
+WANDER_DIRECTIONS = {
+    (1, 0): "right",
+    (-1, 0): "left",
+    (0, -1): "up",
+    (0, 1): "down",
+}
+
+WANDER_INTERVAL_SEC = 30
 
 
 class Monster:
@@ -54,6 +65,24 @@ class Game:
         """Remove a disconnected player."""
         self.players.pop(username, None)
 
+    def list_monster_cells(self):
+        """Return ``(x, y, monster)`` for every occupied cell."""
+        cells = []
+        for x in range(FIELD_SIZE):
+            for y in range(FIELD_SIZE):
+                monster = self.field[x][y]
+                if monster is not None:
+                    cells.append((x, y, monster))
+        return cells
+
+    def players_at(self, x, y):
+        """Return usernames of players standing on ``(x, y)``."""
+        return [
+            name
+            for name, player in self.players.items()
+            if player.x == x and player.y == y
+        ]
+
     def move(self, username, dx, dy):
         """Move player and build unicast messages."""
         player = self.players[username]
@@ -101,3 +130,32 @@ class Game:
             self.field[x][y] = None
             msg += f", {monster.name} was killed"
         return [], [msg]
+
+    def wander_monster(self):
+        """Move one random monster one cell in a random direction."""
+        cells = self.list_monster_cells()
+        if not cells:
+            return None
+
+        attempts = len(cells) * len(WANDER_DIRECTIONS) * 4
+        for _ in range(attempts):
+            x, y, monster = random.choice(cells)
+            (dx, dy), direction = random.choice(
+                list(WANDER_DIRECTIONS.items())
+            )
+            nx = (x + dx) % FIELD_SIZE
+            ny = (y + dy) % FIELD_SIZE
+            occupant = self.field[nx][ny]
+            if occupant is not None and occupant is not monster:
+                continue
+
+            self.field[x][y] = None
+            self.field[nx][ny] = monster
+
+            broadcast = f"{monster.name} moved one cell {direction}"
+            unicast = {}
+            for username in self.players_at(nx, ny):
+                unicast[username] = [monster.encounter()]
+            return broadcast, unicast
+
+        return None

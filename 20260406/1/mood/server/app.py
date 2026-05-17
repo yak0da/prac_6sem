@@ -4,7 +4,7 @@ import asyncio
 import shlex
 
 from mood.common.constants import HOST, PORT
-from mood.server.game import Game
+from mood.server.game import Game, WANDER_INTERVAL_SEC
 
 game = Game()
 clients = {}
@@ -39,6 +39,15 @@ def schedule_unicast(username, message):
     writer = clients.get(username)
     if writer:
         schedule_send(writer, message)
+
+
+def dispatch_messages(broadcast, unicast):
+    """Send broadcast and per-user unicast messages asynchronously."""
+    if broadcast:
+        schedule_broadcast(broadcast)
+    for username, messages in unicast.items():
+        for message in messages:
+            schedule_unicast(username, message)
 
 
 def process_command(username, data):
@@ -77,6 +86,17 @@ def process_command(username, data):
             return [], [f"{username}: {parts[1]}"]
         case _:
             return ["Invalid command"], []
+
+
+async def wander_loop():
+    """Move a random monster every :data:`WANDER_INTERVAL_SEC` seconds."""
+    while True:
+        await asyncio.sleep(WANDER_INTERVAL_SEC)
+        result = game.wander_monster()
+        if result is None:
+            continue
+        broadcast, unicast = result
+        dispatch_messages(broadcast, unicast)
 
 
 async def handle_client(reader, writer):
@@ -126,6 +146,7 @@ async def handle_client(reader, writer):
 
 async def run_server():
     """Start listening for client connections."""
+    asyncio.create_task(wander_loop())
     server = await asyncio.start_server(handle_client, HOST, PORT)
     async with server:
         await server.serve_forever()
