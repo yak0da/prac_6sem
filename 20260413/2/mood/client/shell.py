@@ -148,6 +148,13 @@ class MUD_SH(cmd.Cmd):
             return
         self.send_command(f"movemonsters {arg}")
 
+    def do_locale(self, arg):
+        """Set message locale: locale ru_RU.UTF-8."""
+        if not arg.strip():
+            print("Invalid arguments")
+            return
+        self.send_command(f"locale {arg.strip()}")
+
     def complete_attack(self, text, line, begidx, endidx):
         """Complete monster or weapon names for attack."""
         del begidx, endidx
