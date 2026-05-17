@@ -170,9 +170,14 @@ async def handle_client(reader, writer):
         await writer.wait_closed()
 
 
-async def run_server():
+async def run_server(host=HOST, port=PORT):
     """Start listening for client connections."""
     asyncio.create_task(wander_loop())
-    server = await asyncio.start_server(handle_client, HOST, PORT)
+    server = await asyncio.start_server(handle_client, host, port)
     async with server:
         await server.serve_forever()
+
+
+def start_server(host=HOST, port=PORT):
+    """Run the server until interrupted (for CLI and tests)."""
+    asyncio.run(run_server(host, port))
