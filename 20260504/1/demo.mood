@@ -1,0 +1,4 @@
+movemonsters off
+addmon dragon hello "Hi" hp 15 coords 1 0
+right
+attack dragon

@@ -82,9 +82,15 @@ def task_html():
 def _copy_docs_for_package():
     src = Path("doc/_build/html")
     dst = Path("mood/docs/html")
+    if not (src / "index.html").is_file():
+        raise FileNotFoundError(
+            "Нет doc/_build/html — сначала: python3 -m doit html"
+        )
+    print(f"Копирование {src} -> {dst} ...")
     if dst.exists():
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
+    print("Готово.")
 
 
 def task_docs_pkg():
